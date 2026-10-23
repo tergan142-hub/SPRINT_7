@@ -5,9 +5,12 @@ from conftest import created_courier, assert_error_response
 
 class TestLoginCourier:
 
-    @allure.title("TC-LC-01: Курьер успешно авторизуется, возвращается id")
+    @allure.title("Проверка, что курьер успешно авторизуется, возвращается id")
     def test_courier_login_success(self, created_courier):
-        payload = {"login": created_courier["login"], "password": created_courier["password"]}
+        payload = {
+            "login": created_courier["login"],
+            "password": created_courier["password"],
+        }
 
         with allure.step("Выполнить запрос авторизации"):
             r = requests.post(URL.LOGIN_COURIER, json=payload)
@@ -19,44 +22,58 @@ class TestLoginCourier:
             body = r.json()
             assert "id" in body and isinstance(body["id"], int) and body["id"] > 0
 
-    @allure.title("TC-LC-02: Ошибка при отсутствии login в запросе")
+    @allure.title("Проверка, что присутствует ошибка при отсутствии login в запросе")
     def test_login_missing_login_field(self, created_courier):
         payload = {"password": created_courier["password"]}
 
         with allure.step("Отправить запрос без login"):
             r = requests.post(URL.LOGIN_COURIER, json=payload)
-            assert_error_response(r, LoginResponseMessage.MISSING_FIELD)
 
-    @allure.title("TC-LC-03: Ошибка при отсутствии password в запросе")
+        with allure.step("Статус 400 и сообщение о недостатке данных"):
+            assert_error_response(
+                r,
+                expected_status_codes=(400,),
+                expected_message_substring="Недостаточно данных для входа",
+            )
+
+    @allure.title("Проверка, что присутствует ошибка при отсутствии password в запросе")
     def test_login_missing_password_field(self, created_courier):
         payload = {"login": created_courier["login"]}
 
         with allure.step("Отправить запрос без password"):
             r = requests.post(URL.LOGIN_COURIER, json=payload)
-            assert_error_response(r, LoginResponseMessage.MISSING_FIELD)
 
-    @allure.title("TC-LC-04: Ошибка при неверном логине")
+        with allure.step("Статус 400 и сообщение о недостатке данных"):
+            assert_error_response(
+                r,
+                expected_status_codes=(400,),
+                expected_message_substring="Недостаточно данных для входа",
+            )
+
+    @allure.title("Проверка, что присутствует ошибка при неверном логине (статус 404)")
     def test_login_wrong_login(self, created_courier):
         payload = {"login": "несуществующий_логин_12345", "password": created_courier["password"]}
 
         with allure.step("Отправить запрос с несуществующим логином"):
             r = requests.post(URL.LOGIN_COURIER, json=payload)
-            assert_error_response(r, LoginResponseMessage.WRONG_CREDENTIALS_404)
 
-    @allure.title("TC-LC-05: Ошибка при неверном пароле")
+        with allure.step("Статус 404 и сообщение об отсутствии учётной записи"):
+            assert_error_response(
+                r,
+                expected_status_codes=(404,),
+                expected_message_substring="Учетная запись не найдена",
+            )
+
+    @allure.title("Проверка, что присутствует ошибка при неверном пароле (статус 404)")
     def test_login_wrong_password(self, created_courier):
         payload = {"login": created_courier["login"], "password": "неверный_пароль_123"}
 
         with allure.step("Отправить запрос с неверным паролем"):
             r = requests.post(URL.LOGIN_COURIER, json=payload)
-            assert_error_response(r, LoginResponseMessage.WRONG_CREDENTIALS_404)
 
-    @allure.title("TC-LC-06: Ошибка при логине несуществующего пользователя")
-    def test_login_nonexistent_user(self, created_courier):
-        from generators import get_courier_data
-        fake = get_courier_data()
-        payload = {"login": f"new_unique_login_{fake['login']}", "password": "любой_пароль"}
-
-        with allure.step("Отправить запрос для заведомо несуществующего пользователя"):
-            r = requests.post(URL.LOGIN_COURIER, json=payload)
-            assert_error_response(r, LoginResponseMessage.WRONG_CREDENTIALS_404)
+        with allure.step("Статус 404 и сообщение об отсутствии учётной записи"):
+            assert_error_response(
+                r,
+                expected_status_codes=(404,),
+                expected_message_substring="Учетная запись не найдена",
+            )
