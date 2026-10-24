@@ -22,15 +22,6 @@ class TestCreateCourier:
         with allure.step("Проверить, что имя не пустое"):
             assert first_name, "Имя не должно быть пустым"
 
-        with allure.step("Проверить, что логин не пустой"):
-            assert login, "Логин не должен быть пустым"
-
-        with allure.step("Проверить, что пароль не пустой"):
-            assert password, "Пароль не должен быть пустым"
-
-        with allure.step("Проверить, что имя не пустое"):
-            assert first_name, "Имя не должно быть пустым"
-
 
     @allure.title("Проверка запрета на создание двух курьеров с одинаковым логином")
     def test_cannot_create_duplicate_courier(self):
@@ -50,7 +41,7 @@ class TestCreateCourier:
         with allure.step("Убедиться, что сервер отклоняет дубликат (статус 409)"):
             assert r2.status_code == 409, f"Ожидался 409 для дубликата, получен {r2.status_code}"
 
-        with allure.step("Строго проверить сообщение об ошибке (по документации)"):
+        with allure.step("Строго проверить сообщение об ошибке"):
             result = r2.json()
             expected_message = ResponseMessage.CREATED_COURIER_WITH_DUPLICATE_LOGIN
             assert result.get("message") == expected_message, (
@@ -109,9 +100,4 @@ class TestCreateCourier:
 
         with allure.step("В теле ответа должно быть ok=True"):
             body = response.json()
-            expected = ResponseMessage.SUCCESS_CREATED_COURIER
-            
-            if isinstance(expected, bool):
-                assert body.get("ok") == expected
-            else:
-                assert body.get("ok") is True, f"Ожидается ok=True, получено {body.get('ok')}"
+            assert body.get("ok") is True, f"Ожидается ok=True, получено {body.get('ok')}"

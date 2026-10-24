@@ -1,7 +1,9 @@
 import allure
 import requests
-from data import URL, LoginResponseMessage
-from conftest import created_courier, assert_error_response
+from data import URL
+from conftest import created_courier
+from helpers import assert_error_response
+
 
 class TestLoginCourier:
 
@@ -16,11 +18,11 @@ class TestLoginCourier:
             r = requests.post(URL.LOGIN_COURIER, json=payload)
 
         with allure.step("Статус должен быть 200"):
-            assert r.status_code == 200
+            assert r.status_code == 200, f"Ожидался 200, получен {r.status_code}"
 
         with allure.step("В ответе должен быть id курьера (положительное целое число)"):
             body = r.json()
-            assert "id" in body and isinstance(body["id"], int) and body["id"] > 0
+            assert "id" in body and isinstance(body["id"], int) and body["id"] > 0, f"Некорректный id: {body}"
 
     @allure.title("Проверка, что присутствует ошибка при отсутствии login в запросе")
     def test_login_missing_login_field(self, created_courier):
